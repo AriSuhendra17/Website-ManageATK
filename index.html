@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alat Tulis Kantor Cabang Kotabumi — Sistem Manajemen Alat Tulis Kantor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">📋</div>
+      <div class="logo-title">ATK KC Kotabumi</div>
+      <div class="logo-sub">BPJS Kesehatan</div>
+    </div>
+
+    <div class="nav-section-label">Menu Utama</div>
+    <button class="nav-item active" onclick="navigate('dashboard', this)">
+      <div class="nav-icon">📊</div> Dashboard
+    </button>
+    <button class="nav-item" onclick="navigate('stok', this)">
+      <div class="nav-icon">📦</div> Data Barang
+    </button>
+    <button class="nav-item" onclick="navigate('permintaan', this)">
+      <div class="nav-icon">📋</div> Permintaan
+      <span class="nav-badge" id="badge-pending">0</span>
+    </button>
+    <button class="nav-item" onclick="navigate('riwayat', this)">
+      <div class="nav-icon">🔄</div> Riwayat Transaksi
+    </button>
+    <button class="nav-item" onclick="navigate('laporan', this)">
+      <div class="nav-icon">📈</div> Laporan
+    </button>
+
+    <div class="nav-section-label">Aksi Cepat</div>
+    <button class="nav-item" onclick="openModal('tambah-barang')">
+      <div class="nav-icon">➕</div> Tambah Barang
+    </button>
+    <button class="nav-item" onclick="openModal('buat-permintaan')">
+      <div class="nav-icon">📤</div> Buat Permintaan
+    </button>
+    <button class="nav-item" onclick="openModal('catat-transaksi')">
+      <div class="nav-icon">✏️</div> Catat Transaksi
+    </button>
+
+    <div class="sidebar-footer">
+      v2.1.Kotabumi<br>
+      <span id="clock" style="color:var(--text-2)"></span>
+    </div>
+  </nav>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="btn btn-icon" id="menu-btn" onclick="toggleSidebar()" style="display:none">☰</button>
+        <div class="page-title" id="topbar-title">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-sm btn-excel" onclick="downloadExcel('ringkasan')">📊 Download Excel</button>
+        <button class="btn btn-sm" onclick="openModal('buat-permintaan')">📤 Permintaan Baru</button>
+        <button class="btn btn-sm btn-primary" onclick="openModal('tambah-barang')">➕ Tambah Barang</button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ╔═══════════════════════════════╗ -->
+      <!-- ║         DASHBOARD             ║ -->
+      <!-- ╚═══════════════════════════════╝ -->
+      <div class="page active" id="page-dashboard">
+        <p class="page-sub">Selamat datang — berikut ringkasan kondisi ATK kantor hari ini.</p>
+
+        <div class="kpi-grid" id="kpi-grid"></div>
+
+        <div id="alert-dashboard"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap">
+          <div>
+            <div class="section-header">
+              <div class="section-title"><span>⚠️</span> Perlu Perhatian</div>
+            </div>
+            <div class="table-card">
+              <div class="table-wrap">
+                <table>
+                  <thead><tr>
+                    <th>Barang</th><th>Stok</th><th>Min</th><th>Status</th>
+                  </tr></thead>
+                  <tbody id="tbl-alert"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="section-header">
+              <div class="section-title"><span>🕐</span> Transaksi Terbaru</div>
+            </div>
+            <div class="table-card">
+              <div class="table-wrap">
+                <table>
+                  <thead><tr>
+                    <th>Barang</th><th>Jenis</th><th>Qty</th><th>Tanggal</th>
+                  </tr></thead>
+                  <tbody id="tbl-recent"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ╔═══════════════════════════════╗ -->
+      <!-- ║         DATA BARANG           ║ -->
+      <!-- ╚═══════════════════════════════╝ -->
+      <div class="page" id="page-stok">
+
+        <div class="excel-download-card">
+          <div class="excel-card-info">
+            <div class="excel-card-icon">📊</div>
+            <div class="excel-card-text">
+              <div class="title">Export Data ke Excel</div>
+              <div class="sub">Download laporan stok, transaksi, dan ringkasan dalam format .xlsx</div>
+            </div>
+          </div>
+          <div class="excel-card-actions">
+            <button class="btn btn-sm btn-excel" onclick="downloadExcel('stok')">📦 Data Stok</button>
+            <button class="btn btn-sm btn-excel" onclick="downloadExcel('transaksi')">🔄 Riwayat Transaksi</button>
+            <button class="btn btn-sm btn-excel" onclick="downloadExcel('ringkasan')">📋 Ringkasan Lengkap</button>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title"><span>📦</span> Data Barang ATK</div>
+          <div class="section-actions">
+            <button class="btn btn-primary btn-sm" onclick="openModal('tambah-barang')">➕ Tambah Barang</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" placeholder="Cari nama atau kode barang..." id="search-stok" oninput="renderStok()">
+          </div>
+          <select class="filter-select" id="filter-kategori" onchange="renderStok()">
+            <option value="">Semua Kategori</option>
+            <option>Kertas</option><option>Alat Tulis</option>
+            <option>File & Arsip</option><option>Elektronik</option><option>Lainnya</option>
+          </select>
+          <select class="filter-select" id="filter-status" onchange="renderStok()">
+            <option value="">Semua Status</option>
+            <option>Aman</option><option>Rendah</option><option>Habis</option>
+          </select>
+        </div>
+
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Kode</th><th>Nama Barang</th><th>Kategori</th><th>Stok</th>
+                <th>Min. Stok</th><th>Satuan</th><th>Harga Satuan</th><th>Status</th><th>Aksi</th>
+              </tr></thead>
+              <tbody id="tbl-stok"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ╔═══════════════════════════════╗ -->
+      <!-- ║         PERMINTAAN            ║ -->
+      <!-- ╚═══════════════════════════════╝ -->
+      <div class="page" id="page-permintaan">
+        <div class="section-header">
+          <div class="section-title"><span>📋</span> Manajemen Permintaan</div>
+          <div class="section-actions">
+            <button class="btn btn-gold btn-sm" onclick="openModal('buat-permintaan')">📤 Buat Permintaan</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" placeholder="Cari pemohon atau barang..." id="search-req" oninput="renderPermintaan()">
+          </div>
+          <select class="filter-select" id="filter-status-req" onchange="renderPermintaan()">
+            <option value="">Semua Status</option>
+            <option>Pending</option><option>Approved</option><option>Rejected</option>
+          </select>
+        </div>
+
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>No. Req</th><th>Tanggal</th><th>Pemohon</th><th>Divisi</th>
+                <th>Barang</th><th>Qty</th><th>Keperluan</th><th>Status</th><th>Aksi</th>
+              </tr></thead>
+              <tbody id="tbl-permintaan"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ╔═══════════════════════════════╗ -->
+      <!-- ║       RIWAYAT TRANSAKSI       ║ -->
+      <!-- ╚═══════════════════════════════╝ -->
+      <div class="page" id="page-riwayat">
+        <div class="section-header">
+          <div class="section-title"><span>🔄</span> Riwayat Transaksi</div>
+          <div class="section-actions">
+            <button class="btn btn-excel btn-sm" onclick="downloadExcel('transaksi')">📊 Download Excel</button>
+            <button class="btn btn-primary btn-sm" onclick="openModal('catat-transaksi')">✏️ Catat Transaksi</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" placeholder="Cari barang atau pelaku..." id="search-trx" oninput="renderRiwayat()">
+          </div>
+          <select class="filter-select" id="filter-jenis-trx" onchange="renderRiwayat()">
+            <option value="">Semua Jenis</option>
+            <option>Masuk</option><option>Keluar</option>
+          </select>
+        </div>
+
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>No. Trx</th><th>Tanggal</th><th>Jenis</th><th>Barang</th>
+                <th>Qty</th><th>Satuan</th><th>Pelaku</th><th>Keterangan</th>
+              </tr></thead>
+              <tbody id="tbl-riwayat"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ╔═══════════════════════════════╗ -->
+      <!-- ║           LAPORAN             ║ -->
+      <!-- ╚═══════════════════════════════╝ -->
+      <div class="page" id="page-laporan">
+        <p class="page-sub">Analisis pemakaian dan performa stok ATK kantor.</p>
+        <div class="kpi-grid" id="kpi-laporan"></div>
+
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title">📊 Distribusi Stok per Kategori</div>
+            <div class="bar-chart" id="chart-kategori"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">📈 Status Stok Keseluruhan</div>
+            <div class="donut-wrap">
+              <canvas id="donut-canvas" width="140" height="140"></canvas>
+              <div class="donut-legend" id="donut-legend"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-header">
+          <div class="section-title"><span>🏆</span> Barang Paling Sering Diminta</div>
+          <div class="section-actions">
+            <button class="btn btn-excel btn-sm" onclick="downloadExcel('ringkasan')">📊 Download Excel Lengkap</button>
+          </div>
+        </div>
+        <div class="top-list" id="top-barang"></div>
+      </div>
+
+    </div><!-- /.content -->
+  </div><!-- /.main -->
+</div><!-- /.app -->
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
